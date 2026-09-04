@@ -1,0 +1,42 @@
+# Generated images (intermediates)
+vibe_images/
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor directories
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+
+# Temporary extracted docx files
+tmp_docx/
+web/tmp_docx/
+web/web/
+
+# Supabase CLI temp
+web/supabase/.temp/
+
+# Large binaries / executables
+DOCS/
+*.exe
