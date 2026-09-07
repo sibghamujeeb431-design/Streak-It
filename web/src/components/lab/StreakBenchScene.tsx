@@ -1,3 +1,5 @@
+import { useRef, useState } from 'react'
+import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react'
 import { Microscope } from 'lucide-react'
 import type {
   CarryoverTechnique,
@@ -62,7 +64,10 @@ export function StreakBenchScene({
       key={activeMistake?.timestamp ?? 'ok'}
       className={`rounded-card ${activeMistake ? 'animate-error-shake' : ''}`}
     >
-      <BenchSurface className="min-h-[520px] flex flex-col overflow-hidden">
+      <BenchSurface
+        photoSrc="/images/lab/scenes/streak-plate-scene.png"
+        className="min-h-[520px] flex flex-col overflow-hidden"
+      >
         {activeMistake && (
           <div className="absolute inset-0 bg-coral/[0.04] pointer-events-none z-20" />
         )}
@@ -125,14 +130,28 @@ export function StreakBenchScene({
               </button>
 
               <div className="flex flex-col items-center gap-5 flex-1 max-w-md">
-                <div className="relative">
-                  <PlateView
-                    regions={regions}
-                    outcome={null}
-                    grown={false}
-                    size={240}
-                    activeRegion={step === 'streak' ? activeRegionIndex : undefined}
-                  />
+                <div className="relative pb-6">
+                  {step === 'streak' ? (
+                    <DragToStreakZone
+                      disabled={
+                        phase === 'cooling' ||
+                        activeRegion >= REGION_COUNT ||
+                        loopHot ||
+                        (activeRegion > 0 && !loopFlamed)
+                      }
+                      onComplete={onStreakRegion}
+                    >
+                      <PlateView
+                        regions={regions}
+                        outcome={null}
+                        grown={false}
+                        size={240}
+                        activeRegion={activeRegionIndex}
+                      />
+                    </DragToStreakZone>
+                  ) : (
+                    <PlateView regions={regions} outcome={null} grown={false} size={240} />
+                  )}
                   {loopHot && (
                     <div className="absolute inset-0 rounded-full bg-coral/5 animate-pulse pointer-events-none" />
                   )}
@@ -154,9 +173,9 @@ export function StreakBenchScene({
                     type="button"
                     onClick={onStreakRegion}
                     disabled={loopHot || (activeRegion > 0 && !loopFlamed)}
-                    className="bg-coral hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-6 py-2.5 rounded-button transition-colors"
+                    className="text-xs font-medium text-stone/70 hover:text-coral underline underline-offset-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    Streak Region {activeRegion + 1}
+                    Or tap to streak Region {activeRegion + 1}
                   </button>
                 )}
               </div>
@@ -204,6 +223,93 @@ export function StreakBenchScene({
           </button>
         </div>
       </BenchSurface>
+    </div>
+  )
+}
+
+/**
+ * Wraps the plate so the person drags the loop across the agar in a
+ * real zig-zag motion instead of tapping a button. A drag that covers
+ * enough on-screen distance while the pointer stays inside the zone
+ * counts as one streak pass. Falls back to a plain tap for accessibility.
+ */
+function DragToStreakZone({
+  disabled,
+  onComplete,
+  children,
+}: {
+  disabled: boolean
+  onComplete: () => void
+  children: ReactNode
+}) {
+  const zoneRef = useRef<HTMLDivElement>(null)
+  const draggingRef = useRef(false)
+  const lastPointRef = useRef<{ x: number; y: number } | null>(null)
+  const distanceRef = useRef(0)
+  const [dragging, setDragging] = useState(false)
+  const [progress, setProgress] = useState(0)
+
+  const THRESHOLD = 260
+
+  function handlePointerDown(e: ReactPointerEvent) {
+    if (disabled) return
+    draggingRef.current = true
+    distanceRef.current = 0
+    lastPointRef.current = { x: e.clientX, y: e.clientY }
+    setDragging(true)
+    setProgress(0)
+    zoneRef.current?.setPointerCapture(e.pointerId)
+  }
+
+  function handlePointerMove(e: ReactPointerEvent) {
+    if (!draggingRef.current || !lastPointRef.current) return
+    const dx = e.clientX - lastPointRef.current.x
+    const dy = e.clientY - lastPointRef.current.y
+    distanceRef.current += Math.hypot(dx, dy)
+    lastPointRef.current = { x: e.clientX, y: e.clientY }
+    setProgress(Math.min(1, distanceRef.current / THRESHOLD))
+  }
+
+  function finishDrag() {
+    if (!draggingRef.current) return
+    draggingRef.current = false
+    setDragging(false)
+    const completed = distanceRef.current >= THRESHOLD
+    setProgress(0)
+    distanceRef.current = 0
+    lastPointRef.current = null
+    if (completed) onComplete()
+  }
+
+  return (
+    <div
+      ref={zoneRef}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={finishDrag}
+      onPointerCancel={finishDrag}
+      className={`relative touch-none ${
+        disabled ? 'cursor-not-allowed' : dragging ? 'cursor-grabbing' : 'cursor-grab'
+      }`}
+    >
+      {children}
+
+      {!disabled && (
+        <div
+          className={`absolute inset-0 rounded-full pointer-events-none transition-opacity duration-200 ${
+            dragging ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{
+            boxShadow: `inset 0 0 0 ${3 + progress * 5}px rgba(46,125,110,${0.15 + progress * 0.5})`,
+          }}
+        />
+      )}
+
+      {!disabled && !dragging && (
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 translate-y-full text-[10px] font-medium text-stone/70 whitespace-nowrap">
+          Click and drag across the plate to streak
+        </div>
+      )}
     </div>
   )
 }

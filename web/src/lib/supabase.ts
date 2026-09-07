@@ -17,10 +17,9 @@ if (!isConfigured) {
 
 // Use a dummy URL when credentials are missing so the client module can still
 // be imported and the React tree can mount for local UI verification.
-export const supabase = createClient(
-  isConfigured ? supabaseUrl : 'http://localhost',
-  isConfigured ? supabaseAnonKey : 'dummy-anon-key',
-)
+export const supabase = isConfigured
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : (null as unknown as ReturnType<typeof createClient>)
 
 export type Profile = {
   id: string

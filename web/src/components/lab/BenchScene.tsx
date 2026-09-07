@@ -8,14 +8,17 @@ import type {
   ReagentId,
   StepId,
 } from '../../data/gramStaining'
+import type { LabMode } from '../../data/labCommon'
 import { REAGENTS } from '../../data/gramStaining'
 import { BenchSurface } from './BenchSurface'
 import { MicroscopeView } from './MicroscopeView'
+import { MicroscopePanel } from './MicroscopePanel'
 import { ReagentBottle } from './ReagentBottle'
 
 interface BenchSceneProps {
   step: StepId
   phase: Phase
+  mode: LabMode
   decolorizeStage: DecolorizeStage
   activeMistake: Mistake | null
   microscopeOn: boolean
@@ -27,6 +30,7 @@ interface BenchSceneProps {
 export function BenchScene({
   step,
   phase,
+  mode,
   decolorizeStage,
   activeMistake,
   microscopeOn,
@@ -65,6 +69,19 @@ export function BenchScene({
     return null
   }, [phase, step, decolorizeStage])
 
+  const microscopeCaption = useMemo(() => {
+    if (step === 'prepare') return null
+    if (step === 'stain') return phase === 'select' ? 'Awaiting crystal violet' : 'Crystal violet applied'
+    if (step === 'decolorize') {
+      if (decolorizeStage === null) return 'Iodine mordant applied'
+      if (decolorizeStage === 'iodine') return 'Decolorizing...'
+      return 'Decolorized'
+    }
+    if (step === 'counterstain') return phase === 'select' ? 'Awaiting safranin' : 'Safranin applied'
+    if (step === 'observe' || step === 'interpret') return 'Final stained slide'
+    return null
+  }, [step, phase, decolorizeStage])
+
   const showAllReagents = step === 'stain' || step === 'counterstain'
   const isDecolorizeIodine = step === 'decolorize' && decolorizeStage === null
   const isDecolorizeDecolorizer = step === 'decolorize' && decolorizeStage === 'iodine'
@@ -97,7 +114,10 @@ export function BenchScene({
       key={activeMistake?.timestamp ?? 'ok'}
       className={`rounded-card ${activeMistake ? 'animate-error-shake' : ''}`}
     >
-      <BenchSurface className="min-h-[520px] flex flex-col overflow-hidden">
+      <BenchSurface
+        photoSrc="/images/lab/scenes/gram-staining-scene.png"
+        className="min-h-[520px] flex flex-col overflow-hidden"
+      >
         {activeMistake && (
           <div className="absolute inset-0 bg-coral/[0.04] pointer-events-none z-20" />
         )}
@@ -109,50 +129,24 @@ export function BenchScene({
             </div>
           ) : null}
 
-          <div className="relative z-10 h-full flex flex-col lg:flex-row items-end justify-center gap-6 lg:gap-8">
-            <img
-              src="/images/lab/gram-staining/microscope.png"
-              alt="Microscope"
-              className="w-[28%] max-w-[200px] object-contain drop-shadow-md"
-            />
-
-            <div className="flex flex-col items-center gap-5 flex-1 max-w-xl">
-              <div className="flex items-end justify-center gap-2 sm:gap-3">
-                {REAGENTS.map((reagent) => {
-                  const isAvailable = availableReagents.some((r) => r.id === reagent.id)
-                  return (
-                    <ReagentBottle
-                      key={reagent.id}
-                      reagent={reagent}
-                      disabled={
-                        !isAvailable || activeMistake !== null || phase !== 'select'
-                      }
-                      highlighted={activeReagentId === reagent.id}
-                      active={activeReagentId === reagent.id}
-                      onClick={() => onPickReagent(reagent.id)}
-                    />
-                  )
-                })}
-              </div>
-
-              <div className="relative w-full max-w-[320px]">
-                <img
-                  src="/images/lab/gram-staining/slide-tray.png"
-                  alt="Slide tray"
-                  className="w-full object-contain"
-                />
-                <div
-                  className="absolute left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 w-[40%] h-[22%] rounded-full opacity-80 mix-blend-multiply transition-colors duration-600"
-                  style={{ backgroundColor: smearColor }}
-                />
-              </div>
+          <div className="relative z-10 h-full flex flex-col items-center justify-center gap-6">
+            <div className="flex items-end justify-center gap-2 sm:gap-3">
+              {REAGENTS.map((reagent) => {
+                const isAvailable = availableReagents.some((r) => r.id === reagent.id)
+                return (
+                  <ReagentBottle
+                    key={reagent.id}
+                    reagent={reagent}
+                    disabled={
+                      !isAvailable || activeMistake !== null || phase !== 'select'
+                    }
+                    highlighted={mode === 'learn' && activeReagentId === reagent.id}
+                    active={activeReagentId === reagent.id}
+                    onClick={() => onPickReagent(reagent.id)}
+                  />
+                )
+              })}
             </div>
-
-            <img
-              src="/images/lab/gram-staining/wash-station.png"
-              alt="Wash station"
-              className="w-[24%] max-w-[180px] object-contain drop-shadow-md"
-            />
           </div>
 
           <div
@@ -176,6 +170,10 @@ export function BenchScene({
           </button>
         </div>
       </BenchSurface>
+
+      {step !== 'prepare' && !(step === 'observe' && microscopeOn) && (
+        <MicroscopePanel color={smearColor} caption={microscopeCaption} />
+      )}
     </div>
   )
 }

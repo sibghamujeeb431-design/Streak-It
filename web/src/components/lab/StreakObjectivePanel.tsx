@@ -137,11 +137,13 @@ export function StreakObjectivePanel({
             />
           ) : (
             <div className="flex items-center justify-center h-28">
-              <p className="text-sm text-stone text-center">
-                {needsFlame
-                  ? 'Flame the loop before the next region.'
-                  : 'Loop is cool and ready.'}
-              </p>
+              {mode === 'learn' && (
+                <p className="text-sm text-stone text-center">
+                  {needsFlame
+                    ? 'Flame the loop before the next region.'
+                    : 'Loop is cool and ready.'}
+                </p>
+              )}
             </div>
           )}
 
@@ -266,8 +268,14 @@ export function StreakObjectivePanel({
         Step {STEP_ORDER.indexOf(step) + 1} of {STEP_ORDER.length}
       </p>
 
-      <h3 className="text-lg font-semibold text-charcoal mb-2">{info.objective}</h3>
-      <p className="text-sm text-stone mb-6">{info.instruction}</p>
+      {mode === 'test' ? (
+        <h3 className="text-lg font-semibold text-charcoal mb-6">{info.actionLabel}</h3>
+      ) : (
+        <>
+          <h3 className="text-lg font-semibold text-charcoal mb-2">{info.objective}</h3>
+          <p className="text-sm text-stone mb-6">{info.instruction}</p>
+        </>
+      )}
 
       {activeMistake && (
         <div className="mb-4">
@@ -284,7 +292,9 @@ export function StreakObjectivePanel({
 
       <div className="mb-6">{renderAction()}</div>
 
-      <p className="text-xs text-stone/70">{info.helperText}</p>
+      {mode === 'learn' && (
+        <p className="text-xs text-stone/70">{info.helperText}</p>
+      )}
     </div>
   )
 }

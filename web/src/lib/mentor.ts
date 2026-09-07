@@ -14,7 +14,7 @@ export type MentorReply = {
 }
 
 export function buildSystemPrompt({ referenceText, contextString }: MentorPrompt): string {
-  return `${referenceText}\n\n## Current Student Context\n\n${contextString}\n\nRespond in 1–3 sentences. Be helpful, accurate, and encouraging.`
+  return `${referenceText}\n\n## Current Student Context\n\n${contextString}\n\n## Personality and Tone\n\nYou are a warm, conversational, encouraging microbiology tutor. Speak naturally and use phrases like "Nice catch," "That's exactly the kind of mistake that trips people up," or "You already nailed this concept" when relevant. Be friendly and approachable, like a sharp tutor who cares about student learning — not a robot reciting facts, and not forced slang. Keep responses to 2–4 sentences unless more detail is genuinely needed.`
 }
 
 export async function sendMentorMessage(
@@ -28,9 +28,10 @@ export async function sendMentorMessage(
     import.meta.env.VITE_OPENAI_API_URL || 'https://api.openai.com/v1/chat/completions'
   const model = import.meta.env.VITE_OPENAI_MODEL || 'gpt-4o-mini'
 
+  console.log('Mentor API request:', { model, apiUrl, messageLength: userMessage.length })
+
   const hint =
-    fallbackHint ||
-    'Check the Current Objective panel and remember: sequence matters, and decolorization is the critical step.'
+    fallbackHint || 'try asking again in a moment.'
 
   if (!apiKey || apiKey === 'your_openai_api_key') {
     return {
@@ -47,7 +48,7 @@ export async function sendMentorMessage(
 
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 15000)
+    const timeoutId = setTimeout(() => controller.abort(), 30000) // Increased to 30s for larger prompts
 
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -58,8 +59,8 @@ export async function sendMentorMessage(
       body: JSON.stringify({
         model,
         messages,
-        temperature: 0.5,
-        max_tokens: 200,
+        temperature: 0.7,
+        max_tokens: 300,
       }),
       signal: controller.signal,
     })
@@ -68,6 +69,13 @@ export async function sendMentorMessage(
 
     if (!response.ok) {
       const errorBody = await response.text()
+      console.error('Mentor API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorBody,
+        url: apiUrl,
+        model,
+      })
       throw new Error(`API error ${response.status}: ${errorBody}`)
     }
 
@@ -77,12 +85,19 @@ export async function sendMentorMessage(
     const reply = data.choices?.[0]?.message?.content?.trim()
 
     if (!reply) {
+      console.error('Empty response from mentor API:', data)
       throw new Error('Empty response from mentor API')
     }
 
     return { reply }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
+    console.error('Mentor API connection error:', {
+      error,
+      message,
+      url: apiUrl,
+      model,
+    })
     return {
       reply: `The AI mentor is having trouble connecting. You can keep going — ${hint}`,
       error: message,

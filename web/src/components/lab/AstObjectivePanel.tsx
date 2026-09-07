@@ -215,8 +215,14 @@ export function AstObjectivePanel({
         Step {STEP_ORDER.indexOf(step) + 1} of {STEP_ORDER.length}
       </p>
 
-      <h3 className="text-lg font-semibold text-charcoal mb-2">{info.objective}</h3>
-      <p className="text-sm text-stone mb-6">{info.instruction}</p>
+      {mode === 'test' ? (
+        <h3 className="text-lg font-semibold text-charcoal mb-6">{info.actionLabel}</h3>
+      ) : (
+        <>
+          <h3 className="text-lg font-semibold text-charcoal mb-2">{info.objective}</h3>
+          <p className="text-sm text-stone mb-6">{info.instruction}</p>
+        </>
+      )}
 
       {activeMistake && (
         <div className="mb-4">
@@ -233,7 +239,9 @@ export function AstObjectivePanel({
 
       <div className="mb-6">{renderAction()}</div>
 
-      <p className="text-xs text-stone/70">{info.helperText}</p>
+      {mode === 'learn' && (
+        <p className="text-xs text-stone/70">{info.helperText}</p>
+      )}
     </div>
   )
 }

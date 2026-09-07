@@ -9,6 +9,7 @@ import { MentorPanel } from '../../components/lab/MentorPanel'
 import { StreakInterpretQuiz } from '../../components/lab/StreakInterpretQuiz'
 import { ExperimentCompleted } from '../../components/lab/ExperimentCompleted'
 import { PlateView } from '../../components/lab/PlateView'
+import { MicroscopePanel } from '../../components/lab/MicroscopePanel'
 import {
   streakPlateExperiment,
   TICK_MS,
@@ -52,6 +53,45 @@ export function StreakPlateLab() {
       state.mistakes,
     ],
   )
+
+  // Observation window state
+  const observationColor = useMemo(() => {
+    if (currentStepId === 'prepare') return '#E9E4DB'
+    if (currentStepId === 'streak') {
+      if (state.loopHot) return '#B88B6C'
+      if (state.activeRegion > 0 && !state.loopFlamed) return '#A89B8C'
+      const streakedCount = state.regions.filter((r) => r.streaked).length
+      if (streakedCount === 0) return '#B88B6C'
+      if (streakedCount === 1) return '#C99E7C'
+      if (streakedCount === 2) return '#C99E7C'
+      if (streakedCount === 3) return '#C99E7C'
+      return '#C99E7C'
+    }
+    if (currentStepId === 'incubate') {
+      return '#C99E7C'
+    }
+    if (currentStepId === 'observe' || currentStepId === 'interpret') {
+      if (state.streakingOutcome === 'correct') return '#C99E7C'
+      if (state.streakingOutcome === 'poor_separation') return '#B88B6C'
+      if (state.streakingOutcome === 'ineffective_pattern') return '#A89B8C'
+      if (state.streakingOutcome === 'contaminated') return '#9B7B5C'
+      return '#C99E7C'
+    }
+    return '#E9E4DB'
+  }, [currentStepId, state.phase, state.activeRegion, state.regions, state.loopHot, state.loopFlamed, state.streakingOutcome])
+
+  const observationCaption = useMemo(() => {
+    if (currentStepId === 'prepare') return 'Preparing sample'
+    if (currentStepId === 'streak') {
+      if (state.loopHot) return 'Loop cooling...'
+      const streakedCount = state.regions.filter((r) => r.streaked).length
+      if (streakedCount === 0) return 'Streaking sample'
+      return `Streaking region ${state.activeRegion + 1}`
+    }
+    if (currentStepId === 'incubate') return 'Growth developing'
+    if (currentStepId === 'observe' || currentStepId === 'interpret') return 'Final colony pattern'
+    return 'Preparing sample'
+  }, [currentStepId, state.phase, state.activeRegion, state.regions, state.loopHot])
 
   // Timer tick effect.
   useEffect(() => {
@@ -222,6 +262,8 @@ export function StreakPlateLab() {
           </div>
         </div>
       </div>
+
+      <MicroscopePanel color={observationColor} caption={observationCaption} />
     </DashboardLayout>
   )
 }

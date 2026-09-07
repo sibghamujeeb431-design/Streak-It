@@ -9,6 +9,7 @@ import { MentorPanel } from '../../components/lab/MentorPanel'
 import { AstInterpretQuiz } from '../../components/lab/AstInterpretQuiz'
 import { ExperimentCompleted } from '../../components/lab/ExperimentCompleted'
 import { AstPlateView } from '../../components/lab/AstPlateView'
+import { MicroscopePanel } from '../../components/lab/MicroscopePanel'
 import {
   astExperiment,
   TICK_MS,
@@ -30,6 +31,49 @@ export function AstLab() {
   const savedRef = useRef(false)
 
   const currentStepId = STEP_ORDER[state.stepIndex]
+
+  // Observation window state
+  const observationColor = useMemo(() => {
+    if (currentStepId === 'prepare') return '#E9E4DB'
+    if (currentStepId === 'inoculate') {
+      if (state.inoculationQuality === 'uneven') return '#B88B6C'
+      return '#A89B8C'
+    }
+    if (currentStepId === 'discs') {
+      const discCount = state.placedDiscs.length
+      if (discCount === 0) return '#A89B8C'
+      if (discCount === 1) return '#B88B6C'
+      if (discCount === 2) return '#C99E7C'
+      if (discCount === 3) return '#C99E7C'
+      if (discCount === 4) return '#C99E7C'
+      return '#C99E7C'
+    }
+    if (currentStepId === 'incubate') {
+      if (state.inoculationQuality === 'uneven') return '#B88B6C'
+      return '#C99E7C'
+    }
+    if (currentStepId === 'interpret') {
+      if (state.inoculationQuality === 'uneven') return '#B88B6C'
+      return '#C99E7C'
+    }
+    return '#E9E4DB'
+  }, [currentStepId, state.inoculationQuality, state.placedDiscs, state.phase])
+
+  const observationCaption = useMemo(() => {
+    if (currentStepId === 'prepare') return 'Preparing culture'
+    if (currentStepId === 'inoculate') {
+      if (state.inoculationQuality === 'uneven') return 'Uneven lawn'
+      return 'Bacterial lawn'
+    }
+    if (currentStepId === 'discs') {
+      const discCount = state.placedDiscs.length
+      if (discCount === 0) return 'Place antibiotic discs'
+      return `${discCount} disc${discCount > 1 ? 's' : ''} placed`
+    }
+    if (currentStepId === 'incubate') return 'Incubation in progress'
+    if (currentStepId === 'interpret') return 'Final susceptibility pattern'
+    return 'Preparing culture'
+  }, [currentStepId, state.inoculationQuality, state.placedDiscs, state.phase])
 
   const mentorPrompt = useMemo(
     () => ({
@@ -234,6 +278,8 @@ export function AstLab() {
           </div>
         </div>
       </div>
+
+      <MicroscopePanel color={observationColor} caption={observationCaption} />
     </DashboardLayout>
   )
 }

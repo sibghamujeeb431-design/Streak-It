@@ -132,6 +132,7 @@ export function GramStainingLab() {
               <BenchScene
                 step={currentStepId}
                 phase={state.phase}
+                mode={state.mode}
                 decolorizeStage={state.decolorizeStage}
                 activeMistake={state.activeMistake}
                 microscopeOn={state.microscopeOn}

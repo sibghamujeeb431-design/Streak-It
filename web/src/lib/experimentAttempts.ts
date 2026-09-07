@@ -13,6 +13,10 @@ export async function saveAttempt(
   userId: string,
   input: AttemptInput,
 ): Promise<{ data: ExperimentAttempt | null; error: Error | null }> {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase not configured') }
+  }
+
   const { data, error } = await supabase
     .from('experiment_attempts')
     .insert({
@@ -38,6 +42,10 @@ export async function saveAttempt(
 export async function fetchAttempts(
   userId: string,
 ): Promise<{ data: ExperimentAttempt[]; error: Error | null }> {
+  if (!supabase) {
+    return { data: [], error: new Error('Supabase not configured') }
+  }
+
   const { data, error } = await supabase
     .from('experiment_attempts')
     .select('*')
@@ -49,4 +57,11 @@ export async function fetchAttempts(
   }
 
   return { data: (data as ExperimentAttempt[]) ?? [], error: null }
+}
+
+export async function getExperimentAttempts(
+  userId: string,
+): Promise<ExperimentAttempt[]> {
+  const { data } = await fetchAttempts(userId)
+  return data
 }
