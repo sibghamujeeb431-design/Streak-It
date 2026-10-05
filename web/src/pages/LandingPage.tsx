@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Logo'
 import { StreakLine } from '../components/StreakLine'
-import { ArrowRight } from 'lucide-react'
 
 export function LandingPage() {
   const navigate = useNavigate()
@@ -18,19 +17,7 @@ export function LandingPage() {
             onClick={() => navigate('/onboarding')}
             className="text-sm font-medium text-charcoal hover:text-coral transition-colors"
           >
-            Experiments
-          </button>
-          <button
-            onClick={() => navigate('/onboarding')}
-            className="text-sm font-medium text-charcoal hover:text-coral transition-colors"
-          >
             Log in
-          </button>
-          <button
-            onClick={() => navigate('/onboarding')}
-            className="bg-coral hover:bg-coral/90 text-white text-sm font-medium px-5 py-2.5 rounded-button transition-colors"
-          >
-            Get Started
           </button>
         </nav>
       </header>
@@ -55,40 +42,17 @@ export function LandingPage() {
               >
                 Get Started
               </button>
-              <button
-                onClick={() => navigate('/onboarding')}
-                className="group flex items-center gap-2 text-charcoal font-medium hover:text-coral transition-colors"
-              >
-                See how it works
-                <ArrowRight
-                  size={18}
-                  className="transition-transform group-hover:translate-x-1"
-                />
-              </button>
             </div>
           </div>
 
-          {/* Right column - lab scene placeholder */}
+          {/* Right column - lab scene image */}
           <div className="relative">
-            <div className="aspect-[4/3] bg-[#E8E2D8] rounded-card overflow-hidden flex items-center justify-center">
-              <div className="text-center text-stone">
-                <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-stone/10 flex items-center justify-center">
-                  <svg
-                    className="w-12 h-12 text-stone/40"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <p className="text-sm font-medium">Lab scene coming soon</p>
-              </div>
+            <div className="aspect-[4/3] bg-[#E8E2D8] rounded-card overflow-hidden">
+              <img
+                src="/microbiology-hero.png"
+                alt="Microbiology lab scene"
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
         </div>
