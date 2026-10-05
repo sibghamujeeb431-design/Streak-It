@@ -9,6 +9,8 @@ import { MentorPanel } from '../../components/lab/MentorPanel'
 import { InterpretQuiz } from '../../components/lab/InterpretQuiz'
 import { ExperimentCompleted } from '../../components/lab/ExperimentCompleted'
 import { MicroscopeView } from '../../components/lab/MicroscopeView'
+// @ts-ignore
+import { GramStaining3DScene } from '../../components/lab/GramStaining3DScene'
 import {
   gramStainingExperiment,
   TICK_MS,
@@ -141,6 +143,12 @@ export function GramStainingLab() {
                 onToggleMicroscope={() => dispatch({ type: 'TOGGLE_MICROSCOPE' })}
               />
             )}
+
+            {/* 3D Lab Prototype - isolated visual preview */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-stone">3D Lab Prototype</h3>
+              <GramStaining3DScene />
+            </div>
 
             <div className="hidden lg:block">
               <div className="flex items-center gap-3 bg-surface rounded-card border border-stone/10 px-5 py-4">

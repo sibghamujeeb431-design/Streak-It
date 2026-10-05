@@ -22,5 +22,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src", "src/types"],
+  "exclude": ["src/components/3d", "src/components/lab/GramStaining3DScene.tsx", "src/types/three.d.ts", "src/vite-env.d.ts"]
 }
