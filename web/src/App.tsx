@@ -3,6 +3,7 @@ import { useAuth } from './context/useAuth'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { LandingPage } from './pages/LandingPage'
 import { AuthPage } from './pages/AuthPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { OnboardingFlow } from './pages/OnboardingFlow'
 import { DashboardPage } from './pages/DashboardPage'
 import { ExperimentsPage } from './pages/ExperimentsPage'
@@ -29,6 +30,7 @@ function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/onboarding" element={<AuthPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route
         path="/onboarding/questions"
         element={

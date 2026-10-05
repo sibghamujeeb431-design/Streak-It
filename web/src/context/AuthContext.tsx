@@ -12,6 +12,8 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signInWithGoogle: () => Promise<{ error: AuthError | null }>
   signOut: () => Promise<{ error: AuthError | null }>
+  resetPasswordForEmail: (email: string) => Promise<{ error: AuthError | null }>
+  updateUser: (password: string) => Promise<{ error: AuthError | null }>
   refreshProfile: () => Promise<void>
 }
 
@@ -107,6 +109,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error }
   }
 
+  async function resetPasswordForEmail(email: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    return { error }
+  }
+
+  async function updateUser(password: string) {
+    const { error } = await supabase.auth.updateUser({ password })
+    return { error }
+  }
+
   const isNewUser = !hasCompletedOnboarding(profile)
 
   return (
@@ -121,6 +135,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signInWithGoogle,
         signOut,
+        resetPasswordForEmail,
+        updateUser,
         refreshProfile,
       }}
     >

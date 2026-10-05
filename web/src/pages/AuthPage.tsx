@@ -2,19 +2,21 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { Logo } from '../components/Logo'
-import { Loader2, Eye, EyeOff } from 'lucide-react'
+import { Loader2, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 
 export function AuthPage() {
   const navigate = useNavigate()
-  const { user, profile, loading: authLoading, signUp, signIn } = useAuth()
+  const { user, profile, loading: authLoading, signUp, signIn, resetPasswordForEmail } = useAuth()
 
   const [isSignUp, setIsSignUp] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<ReactNode | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [justSignedIn, setJustSignedIn] = useState(false)
+  const [resetEmailSent, setResetEmailSent] = useState(false)
 
   useEffect(() => {
     if (justSignedIn && user && profile && !authLoading) {
@@ -57,6 +59,27 @@ export function AuthPage() {
 
   function switchToSignUp() {
     setIsSignUp(true)
+    setError(null)
+  }
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setIsSubmitting(true)
+
+    const { error } = await resetPasswordForEmail(email)
+    setIsSubmitting(false)
+
+    if (error) {
+      setError(error.message)
+    } else {
+      setResetEmailSent(true)
+    }
+  }
+
+  function backToLogin() {
+    setShowForgotPassword(false)
+    setResetEmailSent(false)
     setError(null)
   }
 
@@ -116,95 +139,170 @@ export function AuthPage() {
           <Logo height={44} />
         </div>
 
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-charcoal mb-2">
-            Welcome to Streak It
-          </h1>
-          <p className="text-stone text-sm">
-            Practice microbiology through real virtual experiments.
-          </p>
-        </div>
+        {showForgotPassword ? (
+          <>
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold text-charcoal mb-2">
+                Reset your password
+              </h1>
+              <p className="text-stone text-sm">
+                {resetEmailSent
+                  ? 'If an account exists for this email, a reset link has been sent. Check your inbox.'
+                  : 'Enter your email and we\'ll send you a reset link.'}
+              </p>
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-charcoal mb-1.5"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              className="w-full px-4 py-3 rounded-button border border-stone/20 bg-white text-charcoal placeholder:text-stone/50 focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral transition-all"
-            />
-          </div>
+            {!resetEmailSent ? (
+              <form onSubmit={handleForgotPassword} className="space-y-5">
+                <div>
+                  <label
+                    htmlFor="reset-email"
+                    className="block text-sm font-medium text-charcoal mb-1.5"
+                  >
+                    Email
+                  </label>
+                  <input
+                    id="reset-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    required
+                    className="w-full px-4 py-3 rounded-button border border-stone/20 bg-white text-charcoal placeholder:text-stone/50 focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral transition-all"
+                  />
+                </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-charcoal mb-1.5"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={6}
-                className="w-full px-4 pr-12 py-3 rounded-button border border-stone/20 bg-white text-charcoal placeholder:text-stone/50 focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral transition-all"
-              />
+                {error && (
+                  <div className="rounded-button bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-coral hover:bg-coral/90 disabled:bg-coral/60 text-white font-medium py-3 rounded-button transition-colors flex items-center justify-center"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="animate-spin" size={20} />
+                  ) : (
+                    'Send Reset Link'
+                  )}
+                </button>
+              </form>
+            ) : (
               <button
                 type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone/60 hover:text-charcoal transition-colors p-1"
+                onClick={backToLogin}
+                className="w-full bg-coral hover:bg-coral/90 text-white font-medium py-3 rounded-button transition-colors flex items-center justify-center gap-2"
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                <ArrowLeft size={18} />
+                Back to login
               </button>
-            </div>
-          </div>
-
-          {error && (
-            <div className="rounded-button bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isSubmitting || authLoading}
-            className="w-full bg-coral hover:bg-coral/90 disabled:bg-coral/60 text-white font-medium py-3 rounded-button transition-colors flex items-center justify-center"
-          >
-            {isSubmitting ? (
-              <Loader2 className="animate-spin" size={20} />
-            ) : (
-              'Continue'
             )}
-          </button>
-        </form>
+          </>
+        ) : (
+          <>
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold text-charcoal mb-2">
+                Welcome to Streak It
+              </h1>
+              <p className="text-stone text-sm">
+                Practice microbiology through real virtual experiments.
+              </p>
+            </div>
 
-        <p className="text-center text-sm text-stone mt-6">
-          {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-          <button
-            type="button"
-            onClick={() => {
-              setIsSignUp(!isSignUp)
-              setError(null)
-            }}
-            className="text-coral font-medium hover:underline"
-          >
-            {isSignUp ? 'Log in' : 'Sign up'}
-          </button>
-        </p>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-charcoal mb-1.5"
+                >
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  className="w-full px-4 py-3 rounded-button border border-stone/20 bg-white text-charcoal placeholder:text-stone/50 focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral transition-all"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-charcoal mb-1.5"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    minLength={6}
+                    className="w-full px-4 pr-12 py-3 rounded-button border border-stone/20 bg-white text-charcoal placeholder:text-stone/50 focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone/60 hover:text-charcoal transition-colors p-1"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {!isSignUp && (
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-stone hover:text-coral mt-1 transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+
+              {error && (
+                <div className="rounded-button bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting || authLoading}
+                className="w-full bg-coral hover:bg-coral/90 disabled:bg-coral/60 text-white font-medium py-3 rounded-button transition-colors flex items-center justify-center"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="animate-spin" size={20} />
+                ) : (
+                  'Continue'
+                )}
+              </button>
+            </form>
+
+            <p className="text-center text-sm text-stone mt-6">
+              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSignUp(!isSignUp)
+                  setError(null)
+                }}
+                className="text-coral font-medium hover:underline"
+              >
+                {isSignUp ? 'Log in' : 'Sign up'}
+              </button>
+            </p>
+          </>
+        )}
       </div>
     </div>
   )
