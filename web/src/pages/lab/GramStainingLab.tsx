@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { DashboardLayout } from '../../components/DashboardLayout'
 import { LabHeader } from '../../components/lab/LabHeader'
 import { StepIndicator } from '../../components/lab/StepIndicator'
+import { BenchScene } from '../../components/lab/BenchScene'
 import { ObjectivePanel } from '../../components/lab/ObjectivePanel'
 import { MentorPanel } from '../../components/lab/MentorPanel'
 import { InterpretQuiz } from '../../components/lab/InterpretQuiz'
 import { ExperimentCompleted } from '../../components/lab/ExperimentCompleted'
 import { MicroscopeView } from '../../components/lab/MicroscopeView'
-// @ts-ignore
-import { GramStaining3DScene } from '../../components/lab/GramStaining3DScene'
 import {
   gramStainingExperiment,
   TICK_MS,
@@ -130,8 +129,17 @@ export function GramStainingLab() {
                 />
               </div>
             ) : (
-              /* 3D Lab Scene - primary visual workspace */
-              <GramStaining3DScene />
+              <BenchScene
+                step={currentStepId}
+                phase={state.phase}
+                mode={state.mode}
+                decolorizeStage={state.decolorizeStage}
+                activeMistake={state.activeMistake}
+                microscopeOn={state.microscopeOn}
+                observedResult={state.observedResult}
+                onPickReagent={(id) => dispatch({ type: 'PICK_REAGENT', payload: id })}
+                onToggleMicroscope={() => dispatch({ type: 'TOGGLE_MICROSCOPE' })}
+              />
             )}
 
             <div className="hidden lg:block">
