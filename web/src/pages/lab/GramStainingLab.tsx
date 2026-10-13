@@ -131,7 +131,14 @@ export function GramStainingLab() {
               </div>
             ) : (
               /* 3D Lab Scene - primary visual workspace */
-              <GramStaining3DScene />
+              <GramStaining3DScene 
+                timerMs={state.timerMs}
+                timerRunning={state.timerRunning}
+                phase={state.phase}
+                mode={state.mode}
+                onPickReagent={(id) => dispatch({ type: 'PICK_REAGENT', payload: id })}
+                onRinseSlide={() => dispatch({ type: 'RINSE' })}
+              />
             )}
 
             <div className="hidden lg:block">

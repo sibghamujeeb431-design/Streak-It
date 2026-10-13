@@ -1,143 +1,196 @@
-import { Canvas } from '@react-three/fiber'
-import { Environment, PerspectiveCamera } from '@react-three/drei'
-import { LabBench } from '../3d/LabBench'
-import { Microscope } from '../3d/Microscope'
-import { ReagentBottle3D } from '../3d/ReagentBottle3D'
-import { SlideTray } from '../3d/SlideTray'
+import { useState } from "react"
 
-export function GramStaining3DScene() {
+type GramStaining3DSceneProps = {
+  timerMs: number
+  timerRunning: boolean
+  phase: string
+  mode: string
+  onPickReagent: (id: 'crystal-violet' | 'iodine' | 'decolorizer' | 'safranin') => void
+  onRinseSlide: () => void
+}
+
+export function GramStaining3DScene({
+  timerMs,
+  timerRunning,
+   phase,
+  onPickReagent,
+  onRinseSlide, 
+}: GramStaining3DSceneProps) {
+
+  const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null)
+const [step, setStep] = useState(1)
+const [crystalVioletApplied, setCrystalVioletApplied] = useState(false)
+const [isRinsing, setIsRinsing] = useState(false)
+
   return (
-    <div className="w-full h-[600px] bg-surface rounded-card overflow-hidden">
-      <Canvas shadows>
-        {/* Fixed overhead camera - wide view of entire workstation */}
-        <PerspectiveCamera makeDefault position={[0, 4.5, 2.5]} fov={55} />
+    <div className="w-full h-[600px] bg-surface rounded-card overflow-hidden relative">
+      {/* Locked laboratory workstation image */}
 
-        {/* Enhanced laboratory lighting */}
-        <ambientLight intensity={0.5} color="#F0F4F8" />
+      <img
+        src="/Gram%20Stain%20Laboratory%20Workstation.png"
+        alt="Gram staining laboratory workstation"
+        className="w-full h-full object-contain scale-[0.82] -translate-y-[20px]"
+      />
 
-        {/* Main directional light - overhead lab lighting */}
-        <directionalLight
-          position={[0, 8, 2]}
-          intensity={1.2}
-          castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-          shadow-camera-far={15}
-          shadow-camera-left={-4}
-          shadow-camera-right={4}
-          shadow-camera-top={4}
-          shadow-camera-bottom={-4}
-        />
+      {/* =========================================================
+          CALIBRATION HOTSPOTS
+          All hotspots are RED temporarily so their positions
+          can be visually adjusted over the real objects.
+         ========================================================= */}
 
-        {/* Fill light - cool laboratory atmosphere */}
-        <pointLight position={[-3, 4, -2]} intensity={0.4} color="#C8E8F8" />
+      {step === 2 && (
+        <div className="absolute left-[36%] top-[24%] w-[7%] h-[18%] border-2 border-red-500/60 rounded-sm pointer-events-none" />
+      )}
 
-        {/* Rim light for depth */}
-        <pointLight position={[0, 3, -4]} intensity={0.3} color="#E8E8E8" />
+      {/* Crystal Violet */}
 
-        {/* Environment map for realistic reflections */}
-        <Environment preset="studio" background={false} />
+      <button
+        type="button"
+        aria-label="Crystal Violet"
+        className="absolute left-[36%] top-[24%] w-[7%] h-[18%] cursor-pointer bg-transparent"
+        onClick={() => {
+          setSelectedEquipment("Crystal Violet")
+          setCrystalVioletApplied(true)
+          onPickReagent("crystal-violet")
+        }}
+      />
+      {/* Gram's Iodine */}
 
-        {/* Ground plane */}
-        <mesh position={[0, -0.5, 0]} receiveShadow>
-          <planeGeometry args={[10, 8]} />
-          <meshStandardMaterial color="#F5F5F5" roughness={0.9} metalness={0.0} />
-        </mesh>
+      <button
+        type="button"
+        aria-label="Gram's Iodine"
+        className="absolute left-[43%] top-[24%] w-[7%] h-[18%] cursor-pointer bg-transparent"
+        onClick={() => setSelectedEquipment("Gram's Iodine")}
+      />
 
-        {/* Background wall */}
-        <mesh position={[0, 2.5, -2.5]} rotation={[0, 0, 0]} receiveShadow>
-          <planeGeometry args={[10, 6]} />
-          <meshStandardMaterial color="#E8E4D9" roughness={0.95} metalness={0.0} />
-        </mesh>
+      {/* Decolorizer */}
 
-        {/* Laboratory workbench */}
-        <LabBench />
+      <button
+        type="button"
+        aria-label="Decolorizer"
+        className="absolute left-[50%] top-[24%] w-[7%] h-[18%] cursor-pointer bg-transparent"
+        onClick={() => setSelectedEquipment("Decolorizer")}
+      />
 
-        {/* Slide tray with prepared slide - PRIMARY work area, center */}
-        <SlideTray />
+      {/* Safranin */}
 
-        {/* Reagent bottles - left side, well-spaced row */}
-        {/* Crystal Violet - violet */}
-        <ReagentBottle3D
-          position={[-1.6, 0.84, 0.3]}
-          liquidColor="#8B5CF6"
-          labelColor="#7C3AED"
-          name="CRYSTAL\nVIOLET"
-        />
-        {/* Gram's Iodine - amber/brown */}
-        <ReagentBottle3D
-          position={[-1.1, 0.84, 0.3]}
-          liquidColor="#D97706"
-          labelColor="#B45309"
-          name="GRAM'S\nIODINE"
-        />
-        {/* Decolorizer - clear */}
-        <ReagentBottle3D
-          position={[-0.6, 0.84, 0.3]}
-          liquidColor="#E5E7EB"
-          labelColor="#9CA3AF"
-          name="DECOLORIZER"
-        />
-        {/* Safranin - pink/red */}
-        <ReagentBottle3D
-          position={[-0.1, 0.84, 0.3]}
-          liquidColor="#EF4444"
-          labelColor="#DC2626"
-          name="SAFRANIN"
-        />
+      <button
+        type="button"
+        aria-label="Safranin"
+        className="absolute left-[57%] top-[24%] w-[7%] h-[18%] cursor-pointer bg-transparent"
+        onClick={() => setSelectedEquipment("Safranin")}
+      />
 
-        {/* Staining/rinse basin - center */}
-        <mesh position={[0.3, 0.85, -0.3]} castShadow receiveShadow>
-          <boxGeometry args={[0.7, 0.1, 0.5]} />
-          <meshStandardMaterial color="#E0E0E0" roughness={0.3} metalness={0.2} />
-        </mesh>
-        <mesh position={[0.3, 0.86, -0.3]} castShadow receiveShadow>
-          <boxGeometry args={[0.6, 0.08, 0.4]} />
-          <meshStandardMaterial color="#F0F8FF" roughness={0.1} metalness={0.0} transparent opacity={0.6} />
-        </mesh>
+      {/* Bacterial Sample */}
 
-        {/* Bacterial culture/sample container - center */}
-        <mesh position={[0.7, 0.85, 0.3]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.15, 0.15, 0.03, 32]} />
-          <meshStandardMaterial color="#E8E0D0" roughness={0.3} metalness={0.1} transparent opacity={0.7} />
-        </mesh>
-        <mesh position={[0.7, 0.86, 0.3]} castShadow>
-          <cylinderGeometry args={[0.14, 0.14, 0.01, 32]} />
-          <meshStandardMaterial color="#F5E6D3" roughness={0.8} metalness={0.0} />
-        </mesh>
-        <mesh position={[0.7, 0.87, 0.3]} castShadow>
-          <cylinderGeometry args={[0.13, 0.13, 0.04, 32]} />
-          <meshStandardMaterial color="#E8E0D0" roughness={0.3} metalness={0.1} transparent opacity={0.7} />
-        </mesh>
+      <button
+        type="button"
+        aria-label="Bacterial sample"
+        className="absolute left-[73%] top-[29%] w-[9%] h-[18%] cursor-pointer bg-transparent"
+        onClick={() => setSelectedEquipment("Bacterial sample")}
+      />
 
-        {/* Microscope - right side */}
-        <Microscope />
+      {/* Microscope */}
 
-        {/* Inoculating loop - right side */}
-        <mesh position={[1.8, 0.86, 0.2]} rotation={[0, 0, Math.PI / 6]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.008, 0.008, 0.45, 16]} />
-          <meshStandardMaterial color="#B0B0B0" roughness={0.2} metalness={0.9} />
-        </mesh>
-        <mesh position={[1.8, 0.86, 0.2]} rotation={[0, 0, Math.PI / 6]} castShadow>
-          <cylinderGeometry args={[0.07, 0.07, 0.015, 16]} />
-          <meshStandardMaterial color="#D0D0D0" roughness={0.3} metalness={0.7} />
-        </mesh>
-        {/* Loop at the end */}
-        <mesh position={[1.93, 1.1, 0.2]} rotation={[0, 0, Math.PI / 6]} castShadow>
-          <torusGeometry args={[0.025, 0.004, 8, 16]} />
-          <meshStandardMaterial color="#B0B0B0" roughness={0.2} metalness={0.9} />
-        </mesh>
+      <button
+        type="button"
+        aria-label="Microscope"
+        className="absolute left-[12%] top-[27%] w-[24%] h-[38%] cursor-pointer bg-transparent"
+        onClick={() => setSelectedEquipment("Microscope")}
+      />
 
-        {/* Paper towel roll - drying area */}
-        <mesh position={[1.9, 0.93, 0.5]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.09, 0.09, 0.4, 16]} />
-          <meshStandardMaterial color="#FAFAF5" roughness={0.95} metalness={0.0} />
-        </mesh>
-        <mesh position={[1.9, 0.93, 0.5]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.05, 0.05, 0.42, 16]} />
-          <meshStandardMaterial color="#E8E8E0" roughness={0.9} metalness={0.0} />
-        </mesh>
-      </Canvas>
+      {/* Slide Tray */}
+
+      <button
+        type="button"
+        aria-label="Slide tray"
+        className="absolute left-[41%] top-[47%] w-[22%] h-[8%] cursor-pointer bg-transparent"
+        onClick={() => setSelectedEquipment("Slide tray")}
+      />
+
+      {step === 1 && (
+  <div className="absolute left-[40%] top-[57%] w-[15%] h-[5%] border-2 border-red-500/60 rounded-sm pointer-events-none" />
+)}
+
+      {/* Glass Slide */}
+
+      <button
+        type="button"
+        aria-label="Glass slide"
+        className="absolute left-[40%] top-[57%] w-[15%] h-[5%] cursor-pointer bg-transparent"
+        onClick={() => {
+          setSelectedEquipment("Glass slide")
+          setStep(2)
+        }}
+      />
+
+      {crystalVioletApplied && phase === 'rinse' && (
+  <button
+    type="button"
+    aria-label="Rinse slide"
+    className="absolute left-[40%] top-[57%] w-[15%] h-[5%] cursor-pointer bg-transparent border-2 border-blue-400/70 rounded-sm"
+
+    onClick={() => {
+  alert("Rinse Slide clicked")
+  setSelectedEquipment("Rinse Slide")
+  setIsRinsing(true)
+  onRinseSlide()
+}}
+  />
+)}
+
+{crystalVioletApplied && (
+  <div className="absolute left-[40%] top-[57%] w-[15%] h-[5%] bg-purple-500/60 rounded-sm pointer-events-none" />
+)}
+
+{isRinsing && (
+  <div
+    className="absolute left-[39%] top-[54%] w-[17%] h-[11%] rounded-md pointer-events-none"
+    style={{
+      background:
+        "linear-gradient(180deg, rgba(147,197,253,0.15), rgba(96,165,250,0.55), rgba(191,219,254,0.2))",
+    }}
+  />
+)}
+
+      {/* Inoculating Tube */}
+
+      <button
+        type="button"
+        aria-label="Inoculating tube"
+        className="absolute left-[59%] top-[50%] w-[5%] h-[19%] cursor-pointer bg-transparent rotate-[-137deg]"
+        onClick={() => setSelectedEquipment("Inoculating tube")}
+      />
+
+      {/* Tissue Paper */}
+
+      <button
+        type="button"
+        aria-label="Tissue paper"
+        className="absolute z-30 left-[40%] top-[57%] w-[15%] h-[5%] cursor-pointer bg-transparent border-2 border-blue-400/70 rounded-sm"
+        onClick={() => setSelectedEquipment("Tissue paper")}
+      />
+
+      {/* =========================================================
+          SELECTION LABEL
+         ========================================================= */}
+
+      {selectedEquipment && (
+        <div className="absolute top-4 left-4 z-20 rounded-lg bg-black/80 px-4 py-2 text-white">
+          {selectedEquipment} selected
+        </div>
+      )}
+{(phase === 'apply' || phase === 'rinse') && (
+  <div className="absolute top-4 right-4 z-20 rounded-lg bg-black/80 px-4 py-2 text-white">
+    <p>{phase === 'rinse' ? 'Ready to rinse' : 'Crystal Violet'}</p>
+    {phase === 'apply' && (
+      <>
+        <p>{(timerMs / 1000).toFixed(1)}s</p>
+        {timerRunning && <p>Staining in progress</p>}
+      </>
+    )}
+  </div>
+)}
     </div>
   )
 }
