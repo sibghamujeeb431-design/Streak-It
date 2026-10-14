@@ -5,6 +5,7 @@ import { experiments } from '../data/experiments'
 import { useAuth } from '../context/useAuth'
 import { fetchAttempts } from '../lib/experimentAttempts'
 import type { ExperimentAttempt } from '../lib/supabase'
+import { calculateStreak } from '../lib/streak'
 import {
   FlaskConical,
   Microscope,
@@ -76,28 +77,11 @@ export function ProgressPage() {
 
   const skillAverages = useMemo(() => computeSkillAverages(attempts), [attempts])
 
-  const { streak, heatmapDates } = useMemo(() => {
+  const streak = useMemo(() => calculateStreak(attempts), [attempts])
+
+  const heatmapDates = useMemo(() => {
     const dates = Array.from(new Set(attempts.map((a) => a.completed_at.slice(0, 10))))
-    dates.sort()
-
-    let streak = 0
-    const today = new Date().toISOString().slice(0, 10)
-    let checkDate = new Date()
-
-    while (true) {
-      const dateString = checkDate.toISOString().slice(0, 10)
-      if (dates.includes(dateString)) {
-        streak += 1
-        checkDate.setDate(checkDate.getDate() - 1)
-      } else if (dateString === today && streak === 0) {
-        // Allow today to be skipped once if no attempt yet today.
-        checkDate.setDate(checkDate.getDate() - 1)
-      } else {
-        break
-      }
-    }
-
-    return { streak, heatmapDates: new Set(dates) }
+    return new Set(dates)
   }, [attempts])
 
   function getBand(score: number | undefined) {
