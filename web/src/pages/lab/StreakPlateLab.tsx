@@ -78,7 +78,7 @@ export function StreakPlateLab() {
       return '#C99E7C'
     }
     return '#E9E4DB'
-  }, [currentStepId, state.phase, state.activeRegion, state.regions, state.loopHot, state.loopFlamed, state.streakingOutcome])
+  }, [currentStepId, state.activeRegion, state.regions, state.loopHot, state.loopFlamed, state.streakingOutcome])
 
   const observationCaption = useMemo(() => {
     if (currentStepId === 'prepare') return 'Preparing sample'
@@ -91,7 +91,7 @@ export function StreakPlateLab() {
     if (currentStepId === 'incubate') return 'Growth developing'
     if (currentStepId === 'observe' || currentStepId === 'interpret') return 'Final colony pattern'
     return 'Preparing sample'
-  }, [currentStepId, state.phase, state.activeRegion, state.regions, state.loopHot])
+  }, [currentStepId, state.activeRegion, state.regions, state.loopHot])
 
   // Timer tick effect.
   useEffect(() => {

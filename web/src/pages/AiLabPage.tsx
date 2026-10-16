@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { DashboardLayout } from '../components/DashboardLayout'
 import { useAuth } from '../context/useAuth'
 import { getExperimentAttempts } from '../lib/experimentAttempts'
@@ -9,8 +9,7 @@ import gramStainingFull from '../../docs/StreakIt_AI_Lab_Mentor_Reference.md?raw
 import astFull from '../../docs/StreakIt_AST_Mentor_Reference.md?raw'
 import streakPlateFull from '../../docs/StreakIt_Streak_Plate_Mentor_Reference.md?raw'
 import serialDilutionFull from '../../docs/StreakIt_Serial_Dilution_Mentor_Reference.md?raw'
-
-type Topic = 'gram-staining' | 'streak-plate' | 'ast' | 'serial-dilution' | 'biochemical-testing' | null
+import biochemicalTestingFull from '../../docs/StreakIt_AI_Lab_Full_Reference.md?raw'
 
 const SUGGESTED_QUESTIONS = [
   "Why doesn't a bigger inhibition zone mean a stronger antibiotic?",
@@ -25,37 +24,52 @@ const EXPERIMENT_KEYWORDS: Record<string, string[]> = {
   'streak-plate': ['streak', 'colony', 'quadrant', 'flame', 'loop', 'aseptic', 'isolate'],
   'ast': ['zone', 'antibiotic', 'susceptible', 'resistant', 'breakpoint', 'disc', 'inhibition'],
   'serial-dilution': ['dilution', 'cfu', 'concentration', '10^-', 'tube', 'plate', 'count'],
-  'biochemical-testing': ['biochemical', 'enzyme', 'catalase', 'oxidase', 'indole', 'citrate', 'urease', 'profile'],
+  'biochemical-testing': ['biochemical', 'enzyme', 'catalase', 'oxidase', 'indole', 'citrate', 'urease', 'metabolic', 'profile'],
 }
 
 function detectExperiment(conversation: MentorMessage[]): string | null {
-  const fullText = conversation.map(m => m.content.toLowerCase()).join(' ')
-  
+  // Get the last user message (current question)
+  const userMessages = conversation.filter(m => m.role === 'user')
+  if (userMessages.length === 0) return null
+
+  const currentQuestion = userMessages[userMessages.length - 1].content.toLowerCase()
+
+  // Check each experiment's keywords against the current question
   for (const [experiment, keywords] of Object.entries(EXPERIMENT_KEYWORDS)) {
-    const matchCount = keywords.filter(keyword => fullText.includes(keyword)).length
+    const matchCount = keywords.filter(keyword => currentQuestion.includes(keyword)).length
     if (matchCount >= 2) {
       return experiment
     }
   }
+
+  // If no clear match in current question, check the entire conversation as fallback
+  const fullText = conversation.map(m => m.content.toLowerCase()).join(' ')
+  for (const [experiment, keywords] of Object.entries(EXPERIMENT_KEYWORDS)) {
+    const matchCount = keywords.filter(keyword => fullText.includes(keyword)).length
+    if (matchCount >= 3) {
+      return experiment
+    }
+  }
+
   return null
 }
 
 function getReferenceText(conversation: MentorMessage[]): string {
   const detectedExperiment = detectExperiment(conversation)
-  
+
   const fullReferences: Record<string, string> = {
     'gram-staining': gramStainingFull,
     'streak-plate': streakPlateFull,
     'ast': astFull,
     'serial-dilution': serialDilutionFull,
-    'biochemical-testing': '', // Biochemical testing is already in the condensed ref
+    'biochemical-testing': biochemicalTestingFull,
   }
-  
+
   if (detectedExperiment && fullReferences[detectedExperiment]) {
     // Use full reference for the detected experiment
     return `${fullReferences[detectedExperiment]}\n\n## Personality and Tone\n\nYou are a warm, conversational, encouraging microbiology tutor. Speak naturally and use phrases like "Nice catch," "That's exactly the kind of mistake that trips people up," or "You already nailed this concept" when relevant. Be friendly and approachable, like a sharp tutor who cares about student learning — not a robot reciting facts, and not forced slang. Keep responses to 2–4 sentences unless more detail is genuinely needed.`
   }
-  
+
   // Use condensed reference by default
   return condensedReference
 }
@@ -65,7 +79,6 @@ export function AiLabPage() {
   const [messages, setMessages] = useState<MentorMessage[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [currentTopic, setCurrentTopic] = useState<Topic>(null)
   const [userPerformance, setUserPerformance] = useState<string>('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -96,24 +109,50 @@ export function AiLabPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Detect topic from AI response
-  useEffect(() => {
-    if (messages.length === 0) return
+  // Derive topic from conversation
+  const currentTopic = useMemo(() => {
+    if (messages.length === 0) return null
+
+    // Get the last user message (current question)
+    const userMessages = messages.filter(m => m.role === 'user')
+    const lastUserMessage = userMessages[userMessages.length - 1]
+
+    // Get the last AI message
     const lastAiMessage = messages[messages.length - 1]
-    if (lastAiMessage.role === 'assistant') {
-      const text = lastAiMessage.content.toLowerCase()
-      if (text.includes('gram') && text.includes('stain')) {
-        setCurrentTopic('gram-staining')
-      } else if (text.includes('streak') || text.includes('colony')) {
-        setCurrentTopic('streak-plate')
-      } else if (text.includes('zone') || text.includes('antibiotic') || text.includes('susceptible')) {
-        setCurrentTopic('ast')
-      } else if (text.includes('dilution') || text.includes('concentration') || text.includes('cfu')) {
-        setCurrentTopic('serial-dilution')
-      } else if (text.includes('biochemical') || text.includes('test') || text.includes('enzyme')) {
-        setCurrentTopic('biochemical-testing')
+
+    // Check user's current question first
+    if (lastUserMessage) {
+      const userText = lastUserMessage.content.toLowerCase()
+      if (userText.includes('gram') && userText.includes('stain')) {
+        return 'gram-staining'
+      } else if (userText.includes('streak') || userText.includes('colony')) {
+        return 'streak-plate'
+      } else if (userText.includes('zone') || userText.includes('antibiotic') || userText.includes('susceptible')) {
+        return 'ast'
+      } else if (userText.includes('dilution') || userText.includes('concentration') || userText.includes('cfu')) {
+        return 'serial-dilution'
+      } else if (userText.includes('biochemical') || userText.includes('catalase') || userText.includes('oxidase') || userText.includes('indole') || userText.includes('citrate') || userText.includes('urease')) {
+        return 'biochemical-testing'
       }
     }
+
+    // Fallback: check AI response if user question doesn't clearly indicate topic
+    if (lastAiMessage && lastAiMessage.role === 'assistant') {
+      const aiText = lastAiMessage.content.toLowerCase()
+      if (aiText.includes('gram') && aiText.includes('stain')) {
+        return 'gram-staining'
+      } else if (aiText.includes('streak') || aiText.includes('colony')) {
+        return 'streak-plate'
+      } else if (aiText.includes('zone') || aiText.includes('antibiotic') || aiText.includes('susceptible')) {
+        return 'ast'
+      } else if (aiText.includes('dilution') || aiText.includes('concentration') || aiText.includes('cfu')) {
+        return 'serial-dilution'
+      } else if (aiText.includes('biochemical') || aiText.includes('catalase') || aiText.includes('oxidase') || aiText.includes('indole') || aiText.includes('citrate') || aiText.includes('urease')) {
+        return 'biochemical-testing'
+      }
+    }
+
+    return null
   }, [messages])
 
   async function handleSend(question: string) {
@@ -137,7 +176,7 @@ export function AiLabPage() {
       contextString,
     }
 
-    const { reply } = await sendMentorMessage(question, messages, prompt, 'try asking again in a moment.')
+    const { reply } = await sendMentorMessage(question, newMessages, prompt, 'try asking again in a moment.')
 
     const aiMessage: MentorMessage = { role: 'assistant', content: reply }
     setMessages((prev) => [...prev, aiMessage])

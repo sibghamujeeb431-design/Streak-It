@@ -57,7 +57,7 @@ export function AstLab() {
       return '#C99E7C'
     }
     return '#E9E4DB'
-  }, [currentStepId, state.inoculationQuality, state.placedDiscs, state.phase])
+  }, [currentStepId, state.inoculationQuality, state.placedDiscs])
 
   const observationCaption = useMemo(() => {
     if (currentStepId === 'prepare') return 'Preparing culture'
@@ -73,7 +73,7 @@ export function AstLab() {
     if (currentStepId === 'incubate') return 'Incubation in progress'
     if (currentStepId === 'interpret') return 'Final susceptibility pattern'
     return 'Preparing culture'
-  }, [currentStepId, state.inoculationQuality, state.placedDiscs, state.phase])
+  }, [currentStepId, state.inoculationQuality, state.placedDiscs])
 
   const mentorPrompt = useMemo(
     () => ({
