@@ -77,7 +77,7 @@ export function SerialDilutionLab() {
       return '#C99E7C'
     }
     return '#E9E4DB'
-  }, [currentStepId, state.currentDilutionIndex, state.phase, state.dilutionAccuracy, state.plateResult])
+  }, [currentStepId, state.currentDilutionIndex, state.dilutionAccuracy, state.plateResult])
 
   const observationCaption = useMemo(() => {
     if (currentStepId === 'prepare') return 'Preparing sample'
@@ -89,7 +89,7 @@ export function SerialDilutionLab() {
     if (currentStepId === 'incubate') return 'Colonies developing'
     if (currentStepId === 'interpret') return 'Final colony count'
     return 'Preparing sample'
-  }, [currentStepId, state.currentDilutionIndex, state.phase, state.dilutionAccuracy])
+  }, [currentStepId, state.currentDilutionIndex, state.dilutionAccuracy])
 
   // Timer tick effect.
   useEffect(() => {

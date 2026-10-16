@@ -77,7 +77,7 @@ export function BiochemicalTestingLab() {
     }
     if (currentStepId === 'interpret') return '#C99E7C'
     return '#E9E4DB'
-  }, [currentStepId, state.inoculatedTubes, state.observedReactions, state.phase])
+  }, [currentStepId, state.inoculatedTubes, state.observedReactions])
 
   const observationCaption = useMemo(() => {
     if (currentStepId === 'prepare') return 'Preparing culture'
@@ -94,7 +94,7 @@ export function BiochemicalTestingLab() {
     }
     if (currentStepId === 'interpret') return 'Final reaction'
     return 'Preparing culture'
-  }, [currentStepId, state.inoculatedTubes, state.observedReactions, state.phase])
+  }, [currentStepId, state.inoculatedTubes, state.observedReactions])
 
   // Timer tick effect.
   useEffect(() => {

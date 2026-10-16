@@ -8,14 +8,14 @@ interface MicroscopePanelProps {
 }
 
 export function MicroscopePanel({ color, caption, size = 128, visible = true }: MicroscopePanelProps) {
-  if (!visible) return null
-
   const hasSample = Boolean(color)
 
   const cellColor = useMemo(() => {
     if (!color) return '#B8B2A8'
     return color
   }, [color])
+
+  if (!visible) return null
 
   const viewBoxSize = 160
   const cellCount = 14
